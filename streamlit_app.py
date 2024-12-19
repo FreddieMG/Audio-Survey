@@ -100,11 +100,11 @@ if user_id:
                         with open(progress_file, "w") as f:
                             json.dump(progress, f, indent=4)
 
-                        st.success("Transcription submitted. Loading next audio sample...")
+                        # Clear session state and reload
+                        st.session_state.clear()
+                        st.session_state["user_id"] = str(user_id)
                         st.experimental_set_query_params(dummy=str(random.random()))
-
-
-        if current_audio_index >= len(absorptions):
+        else:
             st.success("You have completed all audio samples for this session. Thank you!")
 
     except ValueError:
