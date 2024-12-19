@@ -101,7 +101,8 @@ if user_id:
                             json.dump(progress, f, indent=4)
 
                         st.success("Transcription submitted. Loading next audio sample...")
-                        st.experimental_rerun()
+                        st.experimental_set_query_params(dummy=str(random.random()))
+
 
         if current_audio_index >= len(absorptions):
             st.success("You have completed all audio samples for this session. Thank you!")
