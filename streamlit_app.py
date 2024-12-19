@@ -1,9 +1,11 @@
 import os
+import random
 import streamlit as st
 import json
+import csv
 
 # Set the base directory for audio files
-BASE_DIR = "audio_files"
+BASE_DIR = "audio_samples/absorption_Exp/absorption"
 
 # Directory to store user results
 RESULTS_DIR = "results"
@@ -18,6 +20,9 @@ if os.path.exists(USER_IDS_FILE):
         saved_user_ids = json.load(f)
 else:
     saved_user_ids = []
+
+# Absorption levels
+absorptions = [0.1, 0.3, 0.5, 0.7, 0.9]
 
 # Title and Instructions
 st.title("Dynamic Audio Assignment")
@@ -42,62 +47,65 @@ if user_id:
 
         st.success(f"User ID {user_id} has been saved.")
 
-        # If the User ID is 209258912, show a download button for the user_ids.json file
-        if user_id == 209258912:
-            st.info("You have special access to download the user IDs log file.")
-            if os.path.exists(USER_IDS_FILE):
-                with open(USER_IDS_FILE, "r") as f:
-                    user_ids_data = f.read()
-                st.download_button(
-                    label="Download User IDs Log",
-                    data=user_ids_data,
-                    file_name="user_ids.json",
-                    mime="application/json"
-                )
+        # Track the current absorption level for the user
+        user_results_dir = os.path.join(RESULTS_DIR, str(user_id))
+        os.makedirs(user_results_dir, exist_ok=True)
 
-        # Calculate the modulo to determine the directory
-        folder_index = user_id % 7
-        folder_path = os.path.join(BASE_DIR, str(folder_index))
+        progress_file = os.path.join(user_results_dir, "progress.json")
+        csv_file = os.path.join(RESULTS_DIR, "results.csv")
 
-        # Check if the folder exists
-        if not os.path.exists(folder_path):
-            st.error(f"Audio folder for ID modulo {folder_index} does not exist.")
+        # Initialize CSV if it doesn't exist
+        if not os.path.exists(csv_file):
+            with open(csv_file, "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["User ID", "Absorption", "Audio File", "Transcription"])
+
+        # Load progress if it exists, otherwise start from the first absorption
+        if os.path.exists(progress_file):
+            with open(progress_file, "r") as f:
+                progress = json.load(f)
         else:
-            st.success(f"You have been assigned to folder {folder_index}.")
+            progress = {"current_absorption_index": 0, "completed": []}
 
-            # List all audio files in the assigned folder
-            audio_files = [f for f in os.listdir(folder_path) if f.endswith(".mp3")]
+        current_absorption_index = progress["current_absorption_index"]
+
+        if current_absorption_index < len(absorptions):
+            current_absorption = absorptions[current_absorption_index]
+
+            # List all audio files for the current absorption level
+            audio_files = [f for f in os.listdir(BASE_DIR) if f.endswith(".wav") and f"_{current_absorption_index}" in f]
 
             if not audio_files:
-                st.warning("No audio files found in this folder.")
+                st.warning(f"No audio files found for absorption {current_absorption}.")
             else:
-                # Display audio players and transcription input fields
-                transcriptions = {}
-                for idx, audio_file in enumerate(audio_files, start=1):
-                    audio_path = os.path.join(folder_path, audio_file)
+                # Select a random audio file
+                audio_file = random.choice(audio_files)
+                audio_path = os.path.join(BASE_DIR, audio_file)
 
-                    st.subheader(f"Audio Sample {idx}")
-                    st.audio(audio_path, format="audio/mp3")
+                # Display audio and transcription input
+                st.subheader(f"Absorption Level: {current_absorption}")
+                st.audio(audio_path, format="audio/wav")
 
-                    # Text input for transcription
-                    transcriptions[audio_file] = st.text_area(
-                        f"Transcription for Sample {idx}:", key=f"transcription_{idx}"
-                    )
+                transcription = st.text_area("Enter transcription for the above audio:")
 
                 # Submit Button
-                if st.button("Submit Transcriptions"):
-                    # Create a user-specific directory
-                    user_results_dir = os.path.join(RESULTS_DIR, str(user_id))
-                    os.makedirs(user_results_dir, exist_ok=True)
+                if st.button("Submit Transcription"):
+                    # Save transcription to CSV
+                    with open(csv_file, "a", newline="") as f:
+                        writer = csv.writer(f)
+                        writer.writerow([user_id, current_absorption, audio_file, transcription])
 
-                    # Save the transcriptions to a JSON file in the user's directory
-                    result_file = os.path.join(user_results_dir, "transcriptions.json")
-                    with open(result_file, "w") as f:
-                        json.dump(transcriptions, f, indent=4)
+                    # Update progress
+                    progress["completed"].append(current_absorption_index)
+                    progress["current_absorption_index"] += 1
+                    with open(progress_file, "w") as f:
+                        json.dump(progress, f, indent=4)
 
-                    st.success(f"Your transcriptions have been saved to {user_results_dir}!")
-                    st.write("Here are your responses:")
-                    st.json(transcriptions)
+                    st.success("Transcription submitted. Loading next audio sample...")
+                    st.experimental_rerun()
+
+        else:
+            st.success("You have completed all audio samples for this session. Thank you!")
 
     except ValueError:
         st.error("Please enter a valid numerical User ID.")
