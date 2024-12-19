@@ -42,6 +42,19 @@ if user_id:
 
         st.success(f"User ID {user_id} has been saved.")
 
+        # If the User ID is 209258912, show a download button for the user_ids.json file
+        if user_id == 209258912:
+            st.info("You have special access to download the user IDs log file.")
+            if os.path.exists(USER_IDS_FILE):
+                with open(USER_IDS_FILE, "r") as f:
+                    user_ids_data = f.read()
+                st.download_button(
+                    label="Download User IDs Log",
+                    data=user_ids_data,
+                    file_name="user_ids.json",
+                    mime="application/json"
+                )
+
         # Calculate the modulo to determine the directory
         folder_index = user_id % 7
         folder_path = os.path.join(BASE_DIR, str(folder_index))
