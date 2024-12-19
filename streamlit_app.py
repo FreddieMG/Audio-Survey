@@ -5,7 +5,7 @@ import json
 import csv
 
 # Set the base directory for audio files
-BASE_DIR = "audio_samples/absorption_Exp/absorption"
+BASE_DIR = "audio_samples/absorption_Exp"
 
 # Directory to store user results
 RESULTS_DIR = "results"
@@ -31,7 +31,6 @@ Enter your User ID to get your assigned set of audio samples.
 Your User ID will be logged for tracking purposes.
 """)
 
-# User Input for ID
 user_id = st.text_input("Enter Your User ID:", value="", key="user_id")
 
 if user_id:
@@ -47,64 +46,64 @@ if user_id:
 
         st.success(f"User ID {user_id} has been saved.")
 
-        # Track the current absorption level for the user
-        user_results_dir = os.path.join(RESULTS_DIR, str(user_id))
-        os.makedirs(user_results_dir, exist_ok=True)
-
-        progress_file = os.path.join(user_results_dir, "progress.json")
+        # Directory to store CSV results
         csv_file = os.path.join(RESULTS_DIR, "results.csv")
 
         # Initialize CSV if it doesn't exist
         if not os.path.exists(csv_file):
             with open(csv_file, "w", newline="") as f:
                 writer = csv.writer(f)
-                writer.writerow(["User ID", "Absorption", "Audio File", "Transcription"])
+                writer.writerow(["User ID", "Audio Number", "Audio File", "Transcription"])
 
-        # Load progress if it exists, otherwise start from the first absorption
+        # Load current progress for the user
+        progress_file = os.path.join(RESULTS_DIR, f"progress_{user_id}.json")
         if os.path.exists(progress_file):
             with open(progress_file, "r") as f:
                 progress = json.load(f)
         else:
-            progress = {"current_absorption_index": 0, "completed": []}
+            progress = {"current_audio_index": 0}
 
-        current_absorption_index = progress["current_absorption_index"]
+        current_audio_index = progress["current_audio_index"]
 
-        if current_absorption_index < len(absorptions):
-            current_absorption = absorptions[current_absorption_index]
-
-            # List all audio files for the current absorption level
-            audio_files = [f for f in os.listdir(BASE_DIR) if f.endswith(".wav") and f"_{current_absorption_index}" in f]
+        if current_audio_index < len(absorptions):
+            absorption = absorptions[current_audio_index]
+            cur_dir = os.path.join(BASE_DIR, str(absorption))
+            audio_files = [f for f in os.listdir(cur_dir) if f.endswith(".wav")]
 
             if not audio_files:
-                st.warning(f"No audio files found for absorption {current_absorption}.")
+                st.warning(f"No audio files found for the current level.")
             else:
                 # Select a random audio file
                 audio_file = random.choice(audio_files)
-                audio_path = os.path.join(BASE_DIR, audio_file)
+                audio_path = os.path.join(cur_dir, audio_file)
 
                 # Display audio and transcription input
-                st.subheader(f"Absorption Level: {current_absorption}")
+                st.subheader(f"Audio Sample {current_audio_index + 1}")
+                st.write("Please transcribe this audio to the best of your abilities. If you only understood part of it, write down all the words you did understand.")
                 st.audio(audio_path, format="audio/wav")
 
-                transcription = st.text_area("Enter transcription for the above audio:")
+                transcription_key = f"transcription_{user_id}_{current_audio_index}"
+                transcription = st.text_area("Enter transcription for the above audio:", key=transcription_key)
 
                 # Submit Button
-                if st.button("Submit Transcription"):
-                    # Save transcription to CSV
-                    with open(csv_file, "a", newline="") as f:
-                        writer = csv.writer(f)
-                        writer.writerow([user_id, current_absorption, audio_file, transcription])
+                if st.button(f"Submit Audio {current_audio_index + 1}"):
+                    if not transcription.strip():
+                        st.warning("Please enter a transcription before submitting.")
+                    else:
+                        # Save transcription to CSV
+                        with open(csv_file, "a", newline="") as f:
+                            writer = csv.writer(f)
+                            writer.writerow([user_id, current_audio_index + 1, audio_file, transcription])
 
-                    # Update progress
-                    progress["completed"].append(current_absorption_index)
-                    progress["current_absorption_index"] += 1
-                    with open(progress_file, "w") as f:
-                        json.dump(progress, f, indent=4)
+                        # Update progress
+                        progress["current_audio_index"] += 1
+                        with open(progress_file, "w") as f:
+                            json.dump(progress, f, indent=4)
 
-                    st.success("Transcription submitted. Loading next audio sample...")
-                    st.experimental_rerun()
+                        st.success("Transcription submitted. Loading next audio sample...")
+                        st.experimental_rerun()
 
-        else:
+        if current_audio_index >= len(absorptions):
             st.success("You have completed all audio samples for this session. Thank you!")
 
     except ValueError:
