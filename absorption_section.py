@@ -26,26 +26,29 @@ if 'audio_assignments' not in st.session_state:
 if 'current_audio_index' not in st.session_state:
     st.session_state.current_audio_index = 0
 
+if 'transcriptions' not in st.session_state:
+    st.session_state.transcriptions = {}
+
+if 'show_indicator' not in st.session_state:
+    st.session_state.show_indicator = False
 
 # Initialize CSV file
 def initialize_csv():
     if not os.path.exists(CSV_FILE):
-        with open(CSV_FILE, "w", newline="") as f:
+        with open(CSV_FILE, "w", newline="", encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(["User ID", "Audio Number", "Audio File", "Transcription"])
 
-
 # Save transcription to CSV
 def save_transcription(user_id, audio_number, audio_file, transcription):
-    with open(CSV_FILE, "a", newline="") as f:
+    with open(CSV_FILE, "a", newline="", encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow([user_id, audio_number, audio_file, transcription])
-
 
 # Assign audio files to user without duplicates within the same user
 def assign_audio_files():
     audio_assignments = {}
-
+    
     # Assume all absorption directories have the same audio file names
     first_absorption_dir = os.path.join(BASE_DIR, str(absorptions[0]))
     if not os.path.exists(first_absorption_dir):
@@ -82,7 +85,6 @@ def assign_audio_files():
 
     return audio_assignments
 
-
 # Main Application
 def main():
     st.title("Dynamic Audio Assignment")
@@ -103,6 +105,7 @@ def main():
                 st.session_state.user_id = user_id
                 st.session_state.audio_assignments = assign_audio_files()
                 st.session_state.current_audio_index = 0
+                st.session_state.transcriptions = {}  # Reset transcriptions
 
                 if st.session_state.audio_assignments:
                     st.success(f"User ID {user_id} has been recognized and audio assignments have been made.")
@@ -123,6 +126,11 @@ def main():
             total_audios = len(valid_assignments)
 
             if st.session_state.current_audio_index < total_audios:
+                # Display submission indicator if flag is set
+                if st.session_state.show_indicator:
+                    st.success("Transcription submitted successfully and a new audio sample has been allocated.")
+                    st.session_state.show_indicator = False
+
                 audio_number = st.session_state.current_audio_index + 1
                 absorption, audio_file = valid_assignments[st.session_state.current_audio_index]
 
@@ -132,6 +140,9 @@ def main():
                     st.error(f"Audio file {audio_file} does not exist in {str(absorption)}.")
                     return
 
+                # Retrieve existing transcription if available
+                existing_transcription = st.session_state.transcriptions.get(audio_number, "")
+
                 # Display audio and transcription input within a form
                 with st.form(key="transcription_form"):
                     st.subheader(f"Audio Sample {audio_number} of {total_audios}")
@@ -139,32 +150,48 @@ def main():
                         "Please transcribe this audio to the best of your abilities. If you only understood part of it, write down all the words you did understand.")
                     st.audio(audio_path, format="audio/wav")
                     transcription = st.text_area("Enter transcription for the above audio:",
+                                                 value=existing_transcription,
                                                  key=f"transcription_{user_id}_{audio_number}")
 
                     # Submit Button
                     submit_button = st.form_submit_button(label=f"Submit Audio {audio_number}")
 
-                    if submit_button:
-                        if not transcription.strip():
-                            st.warning("Please enter a transcription before submitting.")
-                        else:
-                            # Save transcription to CSV
-                            save_transcription(user_id, audio_number, audio_file, transcription)
-
-                            st.success("Transcription submitted successfully!")
-
-                            # Update progress
-                            st.session_state.current_audio_index += 1
-
-                            # Rerun the app to load the next audio
+                # 'Go Back' Button
+                col1, col2 = st.columns([1, 1])
+                with col1:
+                    if st.button("Go Back"):
+                        if st.session_state.current_audio_index > 0:
+                            st.session_state.current_audio_index -= 1
                             st.rerun()
+                        else:
+                            st.warning("You are at the first audio sample.")
+                with col2:
+                    pass  # Placeholder for layout purposes
+
+                if submit_button:
+                    if not transcription.strip():
+                        st.warning("Please enter a transcription before submitting.")
+                    else:
+                        # Save transcription to session state
+                        st.session_state.transcriptions[audio_number] = transcription
+
+                        # Save transcription to CSV
+                        save_transcription(user_id, audio_number, audio_file, transcription)
+
+                        # Set the submission indicator flag
+                        st.session_state.show_indicator = True
+
+                        # Update progress
+                        st.session_state.current_audio_index += 1
+
+                        # Rerun the app to load the next audio
+                        st.rerun()
 
             else:
                 st.success("You have completed all audio samples for this session. Thank you!")
 
         except ValueError:
             st.error("Please enter a valid numerical User ID.")
-
 
 if __name__ == "__main__":
     main()
