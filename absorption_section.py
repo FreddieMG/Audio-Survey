@@ -92,13 +92,9 @@ def save_results_to_supabase(user_id):
 
     # Insert or update data in Supabase
     response = supabase.table("absorption").upsert(data).execute()
+    print(response)
     
 
-    # Check for errors in the response
-    if response.error:
-        st.error(f"An error occurred while saving results: {response.error['message']}")
-    else:
-        st.success("Results successfully saved to the database.")
 # Main Application
 def main():
     st.title("Dynamic Audio Assignment")
