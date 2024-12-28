@@ -2,19 +2,12 @@ import os
 import random
 import re
 import streamlit as st
-import csv
 import pandas as pd
 from jiwer import wer
+from supabase import create_client, Client
 
 # Set the base directory for audio files
 BASE_DIR = "audio_samples/absorption_Exp"
-
-# Directory to store user results
-RESULTS_DIR = "results"
-os.makedirs(RESULTS_DIR, exist_ok=True)  # Ensure the results directory exists
-
-# File paths
-CSV_FILE = os.path.join(RESULTS_DIR, "absorption_results.csv")
 
 # Absorption levels
 absorptions = [0.1, 0.2, 0.3, 0.4, 0.5]
@@ -48,12 +41,10 @@ if 'show_indicator' not in st.session_state:
 if 'completed' not in st.session_state:
     st.session_state.completed = False
 
-# Initialize CSV file
-def initialize_csv():
-    if not os.path.exists(CSV_FILE):
-        with open(CSV_FILE, "w", newline="", encoding='utf-8') as f:
-            writer = csv.writer(f)
-            writer.writerow(["UID"] + [str(abs) for abs in absorptions])
+# Supabase client setup
+SUPABASE_URL = st.secrets["supabase"]["url"]
+SUPABASE_KEY = st.secrets["supabase"]["key"]
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Assign audio files to user without duplicates within the same user
 def assign_audio_files():
@@ -77,25 +68,37 @@ def assign_audio_files():
 def clean_text(text):
     return re.sub(r'[^a-zA-Z\s]', '', text).lower()
 
-# Save results to CSV
-def save_results_to_csv(user_id):
-    if not os.path.exists(CSV_FILE):
-        initialize_csv()
+def save_results_to_supabase(user_id):
+    # Prepare the data for insertion
+    values = [None] * len(absorptions)
 
-    with open(CSV_FILE, "a", newline="", encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=["UID"] + [str(abs) for abs in absorptions])
-        # Build row for the current user
-        user_row = {"UID": user_id}
-        for absorption, audio_file in st.session_state.audio_assignments.items():
-            user_transcription = st.session_state.transcriptions.get(absorptions.index(absorption) + 1, "")
-            reference_transcription = reference_transcriptions.get(audio_file, "")
-            if reference_transcription:
-                user_row[str(absorption)] = wer(clean_text(reference_transcription), clean_text(user_transcription))
-            else:
-                user_row[str(absorption)] = ""
+    for absorption, audio_file in st.session_state.audio_assignments.items():
+        user_transcription = st.session_state.transcriptions.get(absorptions.index(absorption) + 1, "")
+        reference_transcription = reference_transcriptions.get(audio_file, "")
 
-        writer.writerow(user_row)
+        if reference_transcription:
+            error_rate = wer(clean_text(reference_transcription), clean_text(user_transcription))
+            values[absorptions.index(absorption)] = error_rate
 
+    # Data payload
+    data = {
+        "uid": user_id,  # Ensure to use "uid" as in the schema
+        "0.1": values[0],
+        "0.2": values[1],
+        "0.3": values[2],
+        "0.4": values[3],
+        "0.5": values[4],
+    }
+
+    # Insert or update data in Supabase
+    response = supabase.table("absorption").upsert(data).execute()
+    
+
+    # Check for errors in the response
+    if response.error:
+        st.error(f"An error occurred while saving results: {response.error['message']}")
+    else:
+        st.success("Results successfully saved to the database.")
 # Main Application
 def main():
     st.title("Dynamic Audio Assignment")
@@ -187,7 +190,7 @@ def main():
                 col1, col2 = st.columns([1, 1])
                 with col1:
                     if st.button("Commit and Save"):
-                        save_results_to_csv(st.session_state.user_id)
+                        save_results_to_supabase(st.session_state.user_id)
                         st.session_state.completed = True
                         st.success("All transcriptions have been saved. You may close the session.")
 
