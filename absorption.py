@@ -56,7 +56,7 @@ def main():
                     "Please transcribe this audio to the best of your abilities. If you only understood part of it, write down all the words you did understand."
                 )
                 st.audio(audio_path, format="audio/wav")
-                existing_transcription = st.session_state.absorption_transcriptions.get(audio_number, "")
+                existing_transcription = st.session_state.absorption_transcriptions.get(parameter, "")
                 transcription = st.text_area(
                     "Enter transcription for the above audio:",
                     value=existing_transcription,
@@ -79,7 +79,7 @@ def main():
                     st.warning("Please enter a transcription before submitting.")
                 else:
                     # Save transcription to session state
-                    st.session_state.absorption_transcriptions[audio_number] = transcription
+                    st.session_state.absorption_transcriptions[parameter] = transcription
 
                     # Set the submission indicator flag
                     st.session_state.absorption_show_indicator = True
@@ -99,7 +99,7 @@ def main():
                         st.session_state.absorption_user_id,
                         TABLE_NAME,
                         st.session_state.absorption_transcriptions,
-                        PARAMETERS,
+                        st.session_state.absorption_audio_assignments,
                         "abs_exp_transcription.csv",
                     )
                     st.session_state.absorption_completed = True

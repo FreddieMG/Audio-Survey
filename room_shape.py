@@ -58,7 +58,7 @@ def main():
                     "Please transcribe this audio to the best of your abilities. If you only understood part of it, write down all the words you did understand."
                 )
                 st.audio(audio_path, format="audio/wav")
-                existing_transcription = st.session_state.room_shape_transcriptions.get(audio_number, "")
+                existing_transcription = st.session_state.room_shape_transcriptions.get(parameter, "")
                 transcription = st.text_area(
                     "Enter transcription for the above audio:",
                     value=existing_transcription,
@@ -81,7 +81,7 @@ def main():
                     st.warning("Please enter a transcription before submitting.")
                 else:
                     # Save transcription to session state
-                    st.session_state.room_shape_transcriptions[audio_number] = transcription
+                    st.session_state.room_shape_transcriptions[parameter] = transcription
 
                     # Set the submission indicator flag
                     st.session_state.room_shape_show_indicator = True
@@ -101,8 +101,8 @@ def main():
                         st.session_state.room_shape_user_id,
                         TABLE_NAME,
                         st.session_state.room_shape_transcriptions,
-                        PARAMETERS,
-                        "abs_exp_transcription.csv",
+                        st.session_state.room_shape_audio_assignments,
+                        "room_exp_transcription.csv",
                     )
                     st.session_state.room_shape_completed = True
                     st.success(

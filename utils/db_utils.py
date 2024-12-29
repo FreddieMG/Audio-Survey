@@ -2,7 +2,7 @@ from supabase import create_client
 import streamlit as st
 from utils.transcription_utils import load_reference_transcriptions, clean_text
 from jiwer import wer
-
+import os
 
 
 # Initialize Supabase client
@@ -12,7 +12,7 @@ def get_supabase_client():
     key = st.secrets["supabase"]["key"]
     return create_client(url, key)
 
-def save_results_to_supabase(user_id, table_name, transcriptions, parameters, reference_file):
+def save_results_to_supabase(user_id, table_name, transcriptions, audio_assignments, reference_file):
     """
     Saves transcription results with WER to the specified table in Supabase.
 
@@ -31,12 +31,15 @@ def save_results_to_supabase(user_id, table_name, transcriptions, parameters, re
 
     # Get the Supabase client
     supabase = get_supabase_client()
+    print(reference_transcriptions)
+    print(transcriptions)
 
     # Prepare the data payload
     data = {"uid": user_id}  # Start with the user ID
-    for idx, parameter in enumerate(parameters):
-        transcription = transcriptions.get(idx + 1, None)
-        reference = reference_transcriptions.get(f"{idx + 1}.wav", "")
+    for parameter, audio_file in audio_assignments.items():
+        transcription = transcriptions.get(parameter, None)
+        audio_file_name = os.path.basename(audio_file)  
+        reference = reference_transcriptions.get(audio_file_name, "")
 
         # Calculate WER if both transcription and reference exist
         if transcription and reference:

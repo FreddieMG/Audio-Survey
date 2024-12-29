@@ -3,10 +3,9 @@ import random
 import streamlit as st
 
 def assign_audio_files(base_dir, parameters):
-    print(base_dir)
-    print(os.listdir(base_dir))
     """
-    Assigns one random audio file from each subdirectory named after parameters.
+    Assigns one random audio file from a shared list for all parameters.
+    Ensures no audio sample is selected more than once.
 
     Parameters:
         base_dir (str): Base directory containing subdirectories for each parameter.
@@ -17,32 +16,41 @@ def assign_audio_files(base_dir, parameters):
     """
     audio_assignments = {}
 
+    # Get the list of audio files from the first parameter's directory
+    first_parameter_dir = os.path.normpath(os.path.join(base_dir, str(parameters[0])))
+    if not os.path.exists(first_parameter_dir):
+        st.error(f"Directory for parameter {parameters[0]} does not exist.")
+        return audio_assignments
+
+    # Generate the initial list of audio files
+    shared_audio_files = [f for f in os.listdir(first_parameter_dir) if f.endswith(".wav")]
+    if not shared_audio_files:
+        st.error("No audio files found in the first parameter's directory.")
+        return audio_assignments
+
+    # Shuffle the audio files to ensure randomness
+    random.shuffle(shared_audio_files)
+
+    # Assign audio files to parameters
     for parameter in parameters:
-        # Construct the subdirectory path for the parameter
-        parameter_dir = os.path.join(base_dir, str(parameter))
+        parameter_dir = os.path.normpath(os.path.join(base_dir, str(parameter)))
 
-        # Normalize the path to avoid backslash issues
-        parameter_dir = os.path.normpath(parameter_dir)
-
-        # Check if the directory exists
         if not os.path.exists(parameter_dir):
-            print(parameter_dir)
             st.error(f"Directory for parameter {parameter} does not exist.")
             continue
 
-        # Get the list of audio files in the subdirectory
-        audio_files = [f for f in os.listdir(parameter_dir) if f.endswith(".wav")]
+        if not shared_audio_files:
+            st.error(f"No available audio files left for parameter {parameter}.")
+            break
 
-        if not audio_files:
-            st.error(f"No audio files found in directory: {parameter_dir}")
-            continue
+        # Pop an audio file from the shared list
+        selected_audio = shared_audio_files.pop(0)
 
-        # Randomly select one audio file from the subdirectory
-        selected_audio = random.choice(audio_files)
+        # Construct the full path
+        full_path = os.path.join(parameter_dir, selected_audio)
+        full_path = full_path.replace("\\", "/")  # Normalize for forward slashes
 
-        # Normalize the full file path
-        full_path = os.path.normpath(os.path.join(parameter_dir, selected_audio))
-        full_path = full_path.replace("\\", "/")  # Convert backslashes to forward slashes
+        # Assign the selected file to the parameter
         audio_assignments[parameter] = full_path
 
     return audio_assignments
