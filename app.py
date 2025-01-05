@@ -52,7 +52,7 @@ def navigation():
     else:
         page = st.sidebar.radio(
             "Sections",
-            ["Main", "Absorption", "Room Shape", "Rotation Speed"]
+            ["Main", "Absorption", "Room Shape", "Rotation Speed", "Part 2"]
         )
 
         # Navigate to the selected page
@@ -67,6 +67,8 @@ def navigation():
         elif page == "Rotation Speed":
             import rotation_speed
             rotation_speed.main()
-
+        elif page == "Part 2":
+            import audio_rating_ver1
+            audio_rating_ver1.main()
 if __name__ == "__main__":
     navigation()
