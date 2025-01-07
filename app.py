@@ -1,5 +1,36 @@
 import streamlit as st
 
+def introduction_part_1():
+    st.title("Welcome to Part 1: Transcription Tasks")
+    st.write("""
+    In Part 1, you will complete three transcription tasks. 
+    - In each task, you will listen to audio samples and transcribe what you hear. 
+    - After completing one task, you will proceed to the next.
+
+    Click "Begin Part 1" to begin.
+    """)
+
+    if st.button("Begin Part 1"):
+        st.session_state.current_page = "Absorption"
+        st.rerun()
+
+def introduction_part_2():
+    st.title("Welcome to Part 2: Audio Rating Survey")
+    st.write("""
+    In Part 2, you will rate audio samples on two scales:
+    - **Pleasantness**: How pleasant was the audio experience?
+    - **Clarity**: How clearly could you understand the spoken content?
+
+    After completing Part 2, your results will be saved, and you will complete the experiment.
+
+    Click "Begin Part 2" to start the Audio Rating survey.
+    """)
+
+    if st.button("Begin Part 2"):
+        st.session_state.current_page = "Audio Rating"
+        st.rerun()
+
+
 def main():
     st.title("Audio Perception Experiment")
 
@@ -41,34 +72,42 @@ def main():
                 st.rerun()  # Force rerun to update navigation
             else:
                 st.error("User ID must be a numeric value. Please try again.")
+
 # Sidebar Navigation
 def navigation():
     st.sidebar.title("Navigation")
 
-    # Display navigation options or a warning based on the presence of User ID
+    # Check if User ID is set
     if "user_id" not in st.session_state:
         st.sidebar.warning("Enter your User ID on the main page to proceed.")
         main()  # Force display of the main page if no User ID
     else:
-        page = st.sidebar.radio(
-            "Sections",
-            ["Main", "Absorption", "Room Shape", "Rotation Speed", "Part 2"]
-        )
+        # Initialize part and page tracking
+        if "current_part" not in st.session_state:
+            st.session_state.current_part = "Part 1"
+        if "current_page" not in st.session_state:
+            st.session_state.current_page = "Introduction Part 1"
 
-        # Navigate to the selected page
-        if page == "Main":
-            main()
-        elif page == "Absorption":
-            import absorption
-            absorption.main()
-        elif page == "Room Shape":
-            import room_shape
-            room_shape.main()
-        elif page == "Rotation Speed":
-            import rotation_speed
-            rotation_speed.main()
-        elif page == "Part 2":
-            import audio_rating_ver1
-            audio_rating_ver1.main()
+        # Handle transitions
+        if st.session_state.current_part == "Part 1":
+            if st.session_state.current_page == "Introduction Part 1":
+                introduction_part_1()
+            elif st.session_state.current_page == "Absorption":
+                import absorption
+                absorption.main()
+            elif st.session_state.current_page == "Room Shape":
+                import room_shape
+                room_shape.main()
+            elif st.session_state.current_page == "Rotation Speed":
+                import rotation_speed
+                rotation_speed.main()
+                
+        elif st.session_state.current_part == "Part 2":
+            if st.session_state.current_page == "Introduction Part 2":
+                introduction_part_2()
+            else:  # Default to Audio Rating
+                import audio_rating_ver1
+                audio_rating_ver1.main()
+
 if __name__ == "__main__":
     navigation()

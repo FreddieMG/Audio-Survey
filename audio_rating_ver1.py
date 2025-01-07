@@ -13,6 +13,9 @@ BASE_DIR = "audio_samples/part2/ver1"
 def main():
     st.title("Audio Rating Survey")
 
+    if "current_part" not in st.session_state or st.session_state.current_part != "Part 2":
+        st.warning("Please complete Part 1 before starting Part 2.")
+        st.stop()
     # Check if User ID is set
     if "user_id" not in st.session_state:
         st.warning("Please return to the main page to enter your User ID.")

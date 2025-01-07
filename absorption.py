@@ -101,10 +101,14 @@ def main():
                 st.session_state.absorption_completed = True
                 st.success(
                     "All transcriptions have been saved. You have finished this section of the experiment. "
-                    "Please proceed to the other sections."
+                    "Please proceed to the next section."
                 )
+                                # Redirect to next page
+                st.session_state.current_page = "Room Shape"
+                st.rerun()
 
         with col2:
-            if st.button("Go Back"):
-                st.session_state.absorption_current_audio_index -= 1
-                st.rerun()
+            if not st.session_state.absorption_completed:
+                if st.button("Go Back"):
+                    st.session_state.absorption_current_audio_index -= 1
+                    st.rerun()

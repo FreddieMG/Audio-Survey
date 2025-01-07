@@ -103,8 +103,11 @@ def main():
                     "All transcriptions have been saved. You have finished this section of the experiment. "
                     "Please proceed to the other sections."
                 )
+                st.session_state.current_page = "Rotation Speed"
+                st.rerun()
 
         with col2:
-            if st.button("Go Back"):
-                st.session_state.room_shape_current_audio_index -= 1
-                st.rerun()
+            if not st.session_state.room_shape_completed:
+                if st.button("Go Back"):
+                    st.session_state.absorption_current_audio_index -= 1
+                    st.rerun()
