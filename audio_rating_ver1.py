@@ -65,7 +65,7 @@ def main():
                 label="",
                 options=[None, 5, 4, 3, 2, 1],
                 index=[None, 5, 4, 3, 2, 1].index(existing_ratings.get("pleasantness", None)),
-                format_func=lambda x: f"{x} {'Very Pleasant' if x == 5 else 'Very Unpleasant' if x == 1 else ''}" if x else "No Selection",
+                format_func=lambda x: f"{x} {'Very Pleasant (comfortable)' if x == 5 else 'Very Unpleasant (annoying)' if x == 1 else 'Neutral' if x == 3 else ''}" if x else "No Selection",
                 key=f"pleasantness_{index}",
             )
 
@@ -74,7 +74,7 @@ def main():
                 label="",
                 options=[None, 5, 4, 3, 2, 1],
                 index=[None, 5, 4, 3, 2, 1].index(existing_ratings.get("clarity", None)),
-                format_func=lambda x: f"{x} {'Extremely Clear' if x == 5 else 'Extremely Unclear' if x == 1 else ''}" if x else "No Selection",
+                format_func=lambda x: f"{x} {'Extremely Clear (legible)' if x == 5 else 'Extremely Unclear (illegible)' if x == 1 else ''}" if x else "No Selection",
                 key=f"clarity_{index}",
             )
 
