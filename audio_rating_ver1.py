@@ -8,7 +8,7 @@ from utils.db_utils import get_supabase_client
 CSV_FILE = "part_2_version2.csv"
 audio_data = pd.read_csv(CSV_FILE)
 audio_data = audio_data.sort_values(["poll_index"])
-BASE_DIR = "audio_samples/part2/ver1"
+BASE_DIR = "audio_samples/part2/ver2"
 
 def main():
     st.title("Audio Rating Survey")
