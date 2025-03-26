@@ -1,2 +1,3 @@
 jiwer
 st-supabase-connection
+spellchecker
