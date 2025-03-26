@@ -2,3 +2,4 @@ jiwer
 st-supabase-connection
 spellchecker
 pyspellchecker
+indexer
