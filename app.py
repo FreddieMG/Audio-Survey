@@ -12,12 +12,13 @@ def introduction_part_1():
     )
     st.title("Welcome to Part 1: Transcription Tasks")
     st.write("""
-    In Part 1, you will complete three transcription tasks. 
-    - In each task, you will listen to audio samples and transcribe what you hear. 
-    - After completing one task, you will proceed to the next.
+    In Part 1, you will complete three transcription tasks.
+    - Listen to each audio sample and type what you hear.
+    - You may replay the audio if you miss a word, but do not replay to understand it better.
 
     Click "Begin Part 1" to begin.
     """)
+
     if st.button("Begin Part 1"):
         st.session_state.current_page = "Absorption"
         st.rerun()
@@ -65,7 +66,7 @@ def main():
     You are invited to participate in an experiment examining the effect of audio perturbations and transformations on human perception and understanding.
 
     **Overview of the Study:**
-    - In the first part, we will play speech recordings for you. After hearing the audio sample, you will transcribe the audio in the text box. Please listen to the audio (no more than three times) and transcribe to the best of your abilities.
+    - In the first part, we will play speech recordings for you. After hearing the audio sample, you will transcribe the audio in the text box.
     - In the second part, we will display a larger variety of audio samples, all transformed using several different methods. For each audio sample, you will rate the audio for pleasantness and clarity.
     - After finishing each section, click on the "Submit and Commit" button to save your results.
 
