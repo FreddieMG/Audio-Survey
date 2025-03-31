@@ -7,7 +7,7 @@ from utils.db_utils import save_results_to_supabase
 BASE_DIR = "audio_samples/absorption_Exp"
 CSV_FILE = "abs_exp_transcription.csv"
 TABLE_NAME = "absorption"
-PARAMETERS = [0.1, 0.2, 0.3, 0.4, 0.5]
+PARAMETERS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
 
 reference_transcriptions = load_reference_transcriptions(CSV_FILE)
 def main():
