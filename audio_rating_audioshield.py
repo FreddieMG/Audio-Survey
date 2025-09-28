@@ -5,10 +5,10 @@ import streamlit as st
 from utils.db_utils import get_supabase_client
 
 # Load the CSV
-CSV_FILE = "part_2_version2.csv"
+CSV_FILE = "audioshield_study.csv"
 audio_data = pd.read_csv(CSV_FILE)
 audio_data = audio_data.sort_values(["poll_index"])
-BASE_DIR = "audio_samples/part2/ver2"
+BASE_DIR = "audio_samples/audioshield_study"
 
 def main():
     st.title("Audio Rating Survey")
