@@ -42,7 +42,7 @@ def main():
     - After finishing, your results will be saved.
 
     **Details:**
-    - The experiment will take approximately 20 minutes.
+    - The experiment will take approximately 8 minutes.
     - As a token of appreciation, you will receive a payment of 20 ₪.
 
     **Participation Rights:**
