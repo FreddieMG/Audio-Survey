@@ -42,8 +42,8 @@ def main():
     - After finishing, your results will be saved.
 
     **Details:**
-    - The experiment will take approximately 8 minutes.
-    - As a token of appreciation, you will receive a payment of 20 ₪.
+    - The experiment will take approximately 10 minutes.
+    - As a token of appreciation, you will receive a payment of 25 ₪.
 
     **Participation Rights:**
     - You may stop participating at any time by closing this window. However, closing the window prevents your data from being saved, and you will not receive the payment.
